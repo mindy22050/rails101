@@ -1,6 +1,8 @@
 class PostsController < ApplicationController
 before_action :authenticate_user!
 before_action :find_group
+before_action :member_required, only: [:new, :create ]
+
 
  def new
    @post = @group.posts.new
@@ -12,7 +14,7 @@ before_action :find_group
 
    def create
     @post = @group.posts.build(post_params)
-    @post = current_user.posts.find(params[:id])
+    @post.author = current_user
 
     if @post.save
       redirect_to group_path(@group), notice: "新增文章成功！"
@@ -47,5 +49,13 @@ before_action :find_group
   def post_params
     params.require(:post).permit(:content)
   end
+
+    def member_required
+      if !current_user.is_member_of?(@group)
+        flash[:warning] = "你不是這個討論版的成員，不能發文喔！"
+        redirect_to group_path(@group)
+      end
+    end
+
 
 end
